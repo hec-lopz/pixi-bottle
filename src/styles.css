@@ -1,0 +1,14 @@
+body {
+  background: firebrick;
+  height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.canvas-container {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
