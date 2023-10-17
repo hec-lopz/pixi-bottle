@@ -8,10 +8,24 @@
       href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css"
     />
     <link rel="stylesheet" href="./src/styles.css" />
+    <style>
+      .canvas-container {
+        width: 100%;
+        max-width: 500px;
+        heigth: auto;
+        aspect-ratio: 1;
+        margin: auto;
+      }
+    </style>
     <script src="https://pixijs.download/release/pixi.js"></script>
   </head>
+
   <body>
-    <h1>Hello Pixi</h1>
-    <script defer src="src/index.js"></script>
+    <div id="canvas-container" class="canvas-container"></div>
+    <script defer type="module">
+      import { init } from "./src/index.js";
+
+      init(document.querySelector("#canvas-container"));
+    </script>
   </body>
 </html>

@@ -1,141 +1,111 @@
-const canvasContainer = document.createElement("div");
-canvasContainer.classList.add("canvas-container");
+const fanfare = new Audio("../public/assets/audio/fanfare.mp3");
+const drumRoll = new Audio("../public/assets/audio/drum_roll.mp3");
 
-document.body.appendChild(canvasContainer);
+export function init(canvasContainer) {
+  const app = new PIXI.Application({
+    backgroundAlpha: 0,
+    resizeTo: canvasContainer,
+  });
+  canvasContainer.appendChild(app.view);
 
-const app = new PIXI.Application({
-  backgroundAlpha: 0,
-  resizeTo: canvasContainer,
-});
-canvasContainer.appendChild(app.view);
+  PIXI.Assets.add({
+    alias: "t1",
+    src: "../public/assets/Botella envuelta.png",
+  });
+  PIXI.Assets.add({
+    alias: "t2",
+    src: "../public/assets/Botella.png",
+  });
+  PIXI.Assets.add({
+    alias: "t3",
+    src: "../public/assets/fighter.json",
+  });
+  PIXI.Assets.add({
+    alias: "t4",
+    src: "../public/assets/light_rotate_1.png",
+  });
+  PIXI.Assets.add({
+    alias: "t5",
+    src: "../public/assets/light_rotate_2.png",
+  });
 
-// prepare circle texture, that will be our brush
-const brush = new PIXI.Graphics()
-  .beginFill(0xffffff)
-  .drawRect(-(1000 / 2), -50, 1000, 50);
+  PIXI.Assets.load(["t1", "t2", "t3", "t4", "t5"]).then(() => setup(app));
+}
 
-// Create a line that will interpolate the drawn points
-const line = new PIXI.Graphics();
-
-PIXI.Assets.add({
-  alias: "t1",
-  src: "../public/assets/Botella envuelta.png",
-});
-PIXI.Assets.add({
-  alias: "t2",
-  src: "../public/assets/Botella.png",
-});
-PIXI.Assets.add({
-  alias: "t3",
-  src: "../public/assets/foil.jpg",
-});
-PIXI.Assets.add({
-  alias: "t4",
-  src: "../public/assets/foil_texture.json",
-});
-PIXI.Assets.load(["t1", "t2", "t3", "t4"]).then(setup);
-
-function setup() {
+function setup(app) {
   const { width, height } = app.screen;
-  const stageSize = { width, height };
+  let count = 0;
   const spriteSettings = {
-    width,
-    height: width * 0.75,
-    y: height / 2,
     x: width / 2,
+    y: height / 2,
   };
 
   globalThis.__PIXI_APP__ = app;
 
   const frames = [];
-  for (let i = 0; i < 4; i++) {
-    frames.push(PIXI.Texture.from(`foil${i + 1}.png`));
+  for (let i = 0; i < 30; i++) {
+    const val = i < 10 ? `0${i}` : i;
+    frames.push(PIXI.Texture.from(`rollSequence00${val}.png`));
   }
 
-  // draw polygon
-  const path = [
-    0, 70, 35, 0, 75, 0, 95, 35, 120, 25, 100, 0, 130, 0, 150, 25, 150, 50, 130,
-    75, 115, 150, 75, 150, 45, 125, 0, 150, 0, 130, 35, 75,
-  ];
+  const light = Object.assign(PIXI.Sprite.from("t4"), spriteSettings);
+  light.anchor.set(0.5);
+  const light2 = Object.assign(PIXI.Sprite.from("t5"), spriteSettings);
+  light2.anchor.set(0.5);
 
-  const foilContainer = new PIXI.Container();
-  for (let i = 0; i < 10; i++) {
-    const polygon = new PIXI.Graphics();
-    polygon.lineStyle(0);
-    polygon.beginFill(0x3500fa, 1);
-    polygon.drawPolygon(path);
-    polygon.endFill();
-    polygon.position.set(-75, -75);
-    const anim = new PIXI.AnimatedSprite(frames);
-    anim.position.set(i * 30, 0);
-    anim.scale.set(0.35);
-    anim.anchor.set(0.5);
-    anim.angle = Math.random() * 360;
-    anim.animationSpeed = 0.3;
-    anim.mask = polygon;
-    anim.addChild(polygon);
-    foilContainer.addChild(anim);
-  }
+  const anim = Object.assign(new PIXI.AnimatedSprite(frames), spriteSettings);
+  anim.anchor.set(0.5);
+  anim.scale.set(1.5);
+  anim.animationSpeed = 0.4;
+  anim.loop = false;
 
-  const background = Object.assign(PIXI.Sprite.from("t1"), spriteSettings);
-  background.anchor.set(0.5);
-  const imageToReveal = Object.assign(PIXI.Sprite.from("t2"), spriteSettings);
-  imageToReveal.anchor.set(0.5);
-  const renderTexture = PIXI.RenderTexture.create(stageSize);
-  const renderTextureSprite = new PIXI.Sprite(renderTexture);
-
-  imageToReveal.mask = renderTextureSprite;
-
-  app.stage.addChild(
-    background,
-    imageToReveal,
-    renderTextureSprite,
-    foilContainer
-  );
+  app.stage.addChild(light, light2, anim);
 
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
-  app.stage
-    .on("pointerdown", pointerDown)
-    .on("pointerup", pointerUp)
-    .on("pointerupoutside", pointerUp)
-    .on("pointermove", pointerMove);
+  app.stage.on("pointerdown", onPointerDown).on("pointerup", onPointerUp);
+  anim.onComplete = onAnimationComplete;
+  app.ticker.add(() => {
+    light.rotation += 0.02;
+    light2.rotation += 0.01;
+    light.scale.x = 1 + Math.sin(count) * 0.04;
+    light.scale.y = 1 + Math.cos(count) * 0.04;
+    light2.scale.x = 1 + Math.sin(count) * 0.1;
+    light2.scale.y = 1 + Math.cos(count) * 0.1;
+    count += 0.01;
+  });
+  let initialPoint;
+  let finalPoint;
+  let played = false;
 
-  const screenMiddle = app.stage.width / 2;
-  let dragging = false;
-  let playing = false;
-  let lastDrawnPoint = new PIXI.Point();
-  lastDrawnPoint.set(screenMiddle, height / 2 - background.height / 2);
-  foilContainer.position.set(lastDrawnPoint.x - 150, lastDrawnPoint.y + 25);
-  console.log(imageToReveal);
+  function onAnimationComplete() {
+    if (played) return;
+    drumRoll.pause();
+    fanfare.play();
+    played = true;
+  }
+  function onPointerDown({ global: { x, y } }) {
+    initialPoint = { x, y };
+  }
 
-  function pointerMove({ global: { x, y } }) {
-    if (dragging) {
-      if (y < lastDrawnPoint.y + 25) {
-        brush.position.set(screenMiddle, y);
-        app.renderer.render(brush, {
-          renderTexture,
-          clear: false,
-          skipUpdateTransform: false,
-        });
-      }
-      if (y < lastDrawnPoint.y + 25 && lastDrawnPoint.y < y) {
-        if (!playing)
-          foilContainer.children.forEach((element) => element.play());
-        lastDrawnPoint.set(screenMiddle, y);
-        foilContainer.position.set(lastDrawnPoint.x - 150, y + 25);
-      }
+  function onPointerUp({ global: { x, y } }) {
+    finalPoint = { x, y };
+    if (detectSwipeDown(initialPoint, finalPoint) && !played) {
+      anim.play();
+      drumRoll.play();
     }
   }
+}
 
-  function pointerDown(event) {
-    dragging = true;
-    pointerMove(event);
-  }
+function detectSwipeDown(initialPoint, finalPoint) {
+  var xAbs = Math.abs(initialPoint.x - finalPoint.x);
 
-  function pointerUp(event) {
-    dragging = false;
-    playing = false;
-    foilContainer.children.forEach((element) => element.stop());
-  }
+  var yAbs = Math.abs(initialPoint.y - finalPoint.y);
+
+  //check if distance between two points is greater then 20 otherwise discard swap event
+  if (!(xAbs > 20 || yAbs > 20)) return false;
+
+  if (!(yAbs > xAbs && finalPoint.y > initialPoint.y)) return false;
+
+  return true;
 }
