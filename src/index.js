@@ -1,6 +1,3 @@
-const fanfare = new Audio("./public/assets/audio/fanfare.mp3");
-const drumRoll = new Audio("./public/assets/audio/drum_roll.mp3");
-
 export function init(canvasContainer) {
   const app = new PIXI.Application({
     resizeTo: canvasContainer,
@@ -54,8 +51,6 @@ function setup(app) {
 
   function onAnimationComplete() {
     if (played) return;
-    drumRoll.pause();
-    fanfare.play();
     played = true;
   }
   function onPointerDown({ global: { x, y } }) {
@@ -66,7 +61,6 @@ function setup(app) {
     finalPoint = { x, y };
     if (detectSwipeDown(initialPoint, finalPoint) && !played) {
       anim.play();
-      drumRoll.play();
     }
   }
 }
