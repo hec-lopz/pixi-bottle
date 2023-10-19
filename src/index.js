@@ -1,5 +1,5 @@
-const fanfare = new Audio("../public/assets/audio/fanfare.mp3");
-const drumRoll = new Audio("../public/assets/audio/drum_roll.mp3");
+const fanfare = new Audio("./public/assets/audio/fanfare.mp3");
+const drumRoll = new Audio("./public/assets/audio/drum_roll.mp3");
 
 export function init(canvasContainer) {
   const app = new PIXI.Application({
@@ -9,15 +9,15 @@ export function init(canvasContainer) {
 
   PIXI.Assets.add({
     alias: "t1",
-    src: "/public/assets/Botella envuelta.png",
+    src: "./public/assets/Botella envuelta.png",
   });
   PIXI.Assets.add({
     alias: "t2",
-    src: "/public/assets/Botella.png",
+    src: "./public/assets/Botella.png",
   });
   PIXI.Assets.add({
     alias: "t3",
-    src: "/public/assets/sprite_sheets/modelo0.json",
+    src: "./public/assets/sprite_sheets/modelo0.json",
   });
 
   PIXI.Assets.load(["t1", "t2", "t3", "t4"]).then(() => setup(app));
