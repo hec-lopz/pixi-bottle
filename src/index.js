@@ -3,7 +3,6 @@ const drumRoll = new Audio("../public/assets/audio/drum_roll.mp3");
 
 export function init(canvasContainer) {
   const app = new PIXI.Application({
-    backgroundAlpha: 0,
     resizeTo: canvasContainer,
   });
   canvasContainer.appendChild(app.view);
@@ -18,62 +17,37 @@ export function init(canvasContainer) {
   });
   PIXI.Assets.add({
     alias: "t3",
-    src: "../public/assets/fighter.json",
-  });
-  PIXI.Assets.add({
-    alias: "t4",
-    src: "../public/assets/light_rotate_1.png",
-  });
-  PIXI.Assets.add({
-    alias: "t5",
-    src: "../public/assets/light_rotate_2.png",
+    src: "../public/assets/sprite_sheets/modelo0.json",
   });
 
-  PIXI.Assets.load(["t1", "t2", "t3", "t4", "t5"]).then(() => setup(app));
+  PIXI.Assets.load(["t1", "t2", "t3", "t4"]).then(() => setup(app));
 }
 
 function setup(app) {
+  globalThis.__PIXI_APP__ = app;
   const { width, height } = app.screen;
-  let count = 0;
   const spriteSettings = {
     x: width / 2,
     y: height / 2,
   };
 
-  globalThis.__PIXI_APP__ = app;
-
   const frames = [];
-  for (let i = 0; i < 30; i++) {
-    const val = i < 10 ? `0${i}` : i;
-    frames.push(PIXI.Texture.from(`rollSequence00${val}.png`));
+  for (let i = 2; i <= 16; i++) {
+    frames.push(PIXI.Texture.from(`B${i}.png`));
   }
 
-  const light = Object.assign(PIXI.Sprite.from("t4"), spriteSettings);
-  light.anchor.set(0.5);
-  const light2 = Object.assign(PIXI.Sprite.from("t5"), spriteSettings);
-  light2.anchor.set(0.5);
-
   const anim = Object.assign(new PIXI.AnimatedSprite(frames), spriteSettings);
+  anim.scale.set(1);
   anim.anchor.set(0.5);
-  anim.scale.set(1.5);
-  anim.animationSpeed = 0.4;
+  anim.animationSpeed = 0.2;
   anim.loop = false;
 
-  app.stage.addChild(light, light2, anim);
+  app.stage.addChild(anim);
 
   app.stage.eventMode = "static";
   app.stage.hitArea = app.screen;
   app.stage.on("pointerdown", onPointerDown).on("pointerup", onPointerUp);
   anim.onComplete = onAnimationComplete;
-  app.ticker.add(() => {
-    light.rotation += 0.02;
-    light2.rotation += 0.01;
-    light.scale.x = 1 + Math.sin(count) * 0.04;
-    light.scale.y = 1 + Math.cos(count) * 0.04;
-    light2.scale.x = 1 + Math.sin(count) * 0.1;
-    light2.scale.y = 1 + Math.cos(count) * 0.1;
-    count += 0.01;
-  });
   let initialPoint;
   let finalPoint;
   let played = false;
